@@ -1,7 +1,4 @@
-import java.util.ArrayList;
-import java.util.Deque;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 
 /**
  * Created by xuanwang on 10/28/16.
@@ -44,6 +41,42 @@ public class Trees {
         sb.setLength(len);
     }
 
+    public boolean isSubtree(TreeNode T1, TreeNode T2) {
+        if(T2 == null)
+            return true;
+        else if(T1 == null)
+            return false;
+        else return isSameTree(T1, T2) || isSubtree(T1.left, T2) || isSubtree(T1.right, T2);
+    }
+
+    private boolean isSameTree(TreeNode T1, TreeNode T2) {
+        if(T1 == null && T2 == null)
+            return true;
+        if(T1 == null || T2 == null)
+            return false;
+        if(T1.val != T2.val)
+            return false;
+        return isSameTree(T1.left,T2.left) && isSameTree(T1.right, T2.right);
+    }
+
+    public static int kthSmallest(TreeNode root, int k) {
+        int i = 0;
+        TreeNode p = root;
+        LinkedList<TreeNode> s = new LinkedList<>();
+        while(p != null || ! s.isEmpty()){
+            while(p != null){
+                s.push(p);
+                p = p.left;
+            }
+            p = s.pop();
+            if(++i == k){
+                return p.val;
+            }
+            p = p.right;
+        }
+        return 0;
+    }
+
     public static int maxDepth(TreeNode root) {
         if(root == null) return 0;
 
@@ -72,12 +105,19 @@ public class Trees {
 
         }
         return count;
-
     }
 
-    public boolean isValidBST(TreeNode root) {
+    private static ListNode reverseListInt(ListNode head, ListNode newHead) {
+        if (head == null)
+            return newHead;
+        ListNode next = head.next;
+        head.next = newHead;
+        return reverseListInt(next, head);
+    }
+
+    public boolean validBST(TreeNode root) {
         //return helper(root, Integer.MAX_VALUE, Integer.MIN_VALUE);
-        return isValidBSTIterative(root);
+        return validBSTIterative(root);
     }
 
     private boolean helper(TreeNode root, long max, long min){
@@ -89,7 +129,7 @@ public class Trees {
                 helper(root.right, max, (long)root.val+1);
     }
 
-    public boolean isValidBSTIterative(TreeNode root) {
+    public boolean validBSTIterative(TreeNode root) {
         LinkedList<TreeNode> s = new LinkedList<>();
         TreeNode cur = root;
         TreeNode pre = null;
@@ -107,12 +147,59 @@ public class Trees {
         return true;
     }
 
-    private static ListNode reverseListInt(ListNode head, ListNode newHead) {
-        if (head == null)
-            return newHead;
-        ListNode next = head.next;
-        head.next = newHead;
-        return reverseListInt(next, head);
+    public static ListNode bTreeToLinkedList(TreeNode root) {
+        //flatten tree to linkedlist inorder
+        ListNode list1 = root.left != null ? bTreeToLinkedList(root.left) : null;
+        ListNode list2 = root.right != null ? bTreeToLinkedList(root.right) : null;
+        ListNode list3 = new ListNode( root.val);
+
+        list3.next = list2;
+        if (list1 == null)
+            return list3;
+
+        ListNode last = list1;
+        while (last.next != null)
+            last = last.next;
+        last.next = list3;
+
+        return list1;
     }
-    //flatten tree to linkedlist inorder
+
+    public List<List<Integer>> verticalOrder(TreeNode root) {
+        List<List<Integer>> res = new ArrayList<>();
+        if (root == null) {
+            return res;
+        }
+        //map's key is column, we assume the root column is zero, the left node will minus 1 ,and the right node will plus 1
+        HashMap<Integer, ArrayList<Integer>> map = new HashMap<Integer, ArrayList<Integer>>();
+        Queue<TreeNode> queue = new LinkedList<>();
+        //use a HashMap to store the TreeNode and the according cloumn value
+        HashMap<TreeNode, Integer> weight = new HashMap<TreeNode, Integer>();
+        queue.offer(root);
+        weight.put(root, 0);
+        int min = 0;
+        while (!queue.isEmpty()) {
+            TreeNode node = queue.poll();
+            int w = weight.get(node);
+            if (!map.containsKey(w)) {
+                map.put(w, new ArrayList<>());
+            }
+            map.get(w).add(node.val);
+            if (node.left != null) {
+                queue.add(node.left);
+                weight.put(node.left, w - 1);
+            }
+            if (node.right != null) {
+                queue.add(node.right);
+                weight.put(node.right, w + 1);
+            }
+            //update min ,min means the minimum column value, which is the left most node
+            min = Math.min(min, w);
+        }
+        while (map.containsKey(min)) {
+            res.add(map.get(min++));
+        }
+        return res;
+    }
+
 }
